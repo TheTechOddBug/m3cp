@@ -1,0 +1,30 @@
+[project]
+name = "multimodal-mcp"
+version = "0.1.0"
+description = "Multimodal MCP server"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=0.1.0",
+    "openai>=1.0.0",
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0",
+    "tenacity>=8.2.0",
+    "jsonschema>=4.19.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+mcp-multimodal-server = "multimodal_mcp.main:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+addopts = "-ra"

@@ -1,0 +1,10 @@
+{
+	"servers": {
+		"multimodal_mcp": {
+			"type": "stdio",
+			"command": "uv",
+			"args": ["--directory", "${workspaceFolder}", "run", "multimodal_mcp_server.py"]
+		}
+	},
+	"inputs": []
+}
