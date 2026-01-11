@@ -14,10 +14,10 @@ The server is file-first: it only reads from explicit input paths/URLs and write
 ## Run Locally
 
 ```bash
-python -m mcp_multimodal_server
+python -m multimodal_mcp.main
 ```
 
-Or via the console script:
+Or via the console script (after installing with `pip install -e .` or `uv pip install -e .`):
 
 ```bash
 mcp-multimodal-server
@@ -25,30 +25,32 @@ mcp-multimodal-server
 
 ## MCP Configuration (mcp.json)
 
-Add the server to your MCP client's configuration. For Claude Desktop or other MCP-compatible clients, add to your `mcp.json`:
+Add the server to your MCP client's configuration. For Claude Desktop or other MCP-compatible clients, add to your `.vscode/mcp.json`:
 
 ```json
 {
-  "mcpServers": {
-    "multimodal": {
-      "command": "python",
-      "args": ["-m", "mcp_multimodal_server"],
-      "cwd": "${workspace_folder}"
+  "servers": {
+    "multimodal_mcp": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["--directory", "${workspaceFolder}", "run", "multimodal_mcp_server.py"]
     }
-  }
+  },
+  "inputs": []
 }
 ```
 
-Or if using the console script:
+Or if you've installed the package and want to use the console script:
 
 ```json
 {
-  "mcpServers": {
-    "multimodal": {
-      "command": "mcp-multimodal-server",
-      "cwd": "/path/to/m3cp"
+  "servers": {
+    "multimodal_mcp": {
+      "type": "stdio",
+      "command": "mcp-multimodal-server"
     }
-  }
+  },
+  "inputs": []
 }
 ```
 
@@ -142,3 +144,17 @@ client.call_tool(
 - Presigned uploads are disabled unless `ENABLE_PRESIGNED_UPLOADS=true`.
 - Output directories are only created when `ALLOW_MKDIR=true`.
 - Ensure the server has access only to the files and network locations you intend it to reach.
+
+## Principles of Participation
+
+Everyone is invited and welcome to contribute: open issues, propose pull requests, share ideas, or help improve documentation.  
+Participation is open to all, regardless of background or viewpoint.  
+
+This project follows the [FOSS Pluralism Manifesto](./FOSS_PLURALISM_MANIFESTO.md),  
+which affirms respect for people, freedom to critique ideas, and space for diverse perspectives.  
+
+## License and Copyright
+
+Copyright (c) 2026, Iwan van der Kleijn
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
