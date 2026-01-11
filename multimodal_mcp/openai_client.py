@@ -227,11 +227,16 @@ class OpenAIClient:
         language: Optional[str],
         prompt: Optional[str],
         timestamps: bool,
+        source_filename: Optional[str] = None,
     ) -> TranscriptionResult:
         model = self._require_model(model_override, self._settings.openai_model_stt, "transcription")
         response_format = "verbose_json" if timestamps else "json"
         audio_file = io.BytesIO(audio_bytes)
-        audio_file.name = "audio"  # type: ignore[attr-defined]
+        # OpenAI API requires a filename with extension to detect audio format
+        if source_filename:
+            audio_file.name = source_filename  # type: ignore[attr-defined]
+        else:
+            audio_file.name = "audio.mp3"  # type: ignore[attr-defined]
         started = time.monotonic()
         try:
             response = self._client.audio.transcriptions.create(

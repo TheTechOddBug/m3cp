@@ -89,6 +89,7 @@ class OpenAIClientProtocol(Protocol):
         language: Optional[str],
         prompt: Optional[str],
         timestamps: bool,
+        source_filename: Optional[str] = None,
     ) -> TranscriptionResult:
         ...
 
@@ -315,12 +316,16 @@ class ToolService:
             )
             input_data = read_input(args.audio_ref, self._settings)
             _validate_audio_input(args.audio_ref, input_data)
+            # Extract filename from source for OpenAI format detection
+            from pathlib import Path
+            source_filename = Path(input_data.source).name if input_data.source else None
             result = self._client.transcribe_audio(
                 audio_bytes=input_data.data,
                 model_override=args.model,
                 language=args.language,
                 prompt=args.prompt,
                 timestamps=args.timestamps,
+                source_filename=source_filename,
             )
             if args.timestamps and not result.segments:
                 warnings.append("timestamps requested but not supported by selected model")
