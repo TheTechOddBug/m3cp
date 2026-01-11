@@ -5,7 +5,7 @@ import io
 import json
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
@@ -104,16 +104,20 @@ class OpenAIClient:
         payload_instruction = instruction
         if language:
             payload_instruction = f"Respond in {language}. {instruction}"
-        image_payload: Dict[str, Any] = {
-            "type": "input_image",
-            "image_base64": base64.b64encode(image_bytes).decode("ascii"),
-        }
-        if detail:
-            image_payload["detail"] = detail
-        content = [
-            {"type": "input_text", "text": payload_instruction},
-            image_payload,
+        
+        # Use standard OpenAI Chat Completions API with vision
+        image_url = f"data:image/png;base64,{base64.b64encode(image_bytes).decode('ascii')}"
+        content: List[Dict[str, Any]] = [
+            {"type": "text", "text": payload_instruction},
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": image_url,
+                    "detail": detail or "auto"
+                }
+            }
         ]
+        
         response_format_payload: Optional[Dict[str, Any]] = None
         if response_format == "json":
             if not json_schema:
@@ -126,28 +130,29 @@ class OpenAIClient:
                     "strict": True,
                 },
             }
+        
         started = time.monotonic()
         try:
             params: Dict[str, Any] = {
                 "model": model,
-                "input": [{"role": "user", "content": content}],
-                "max_output_tokens": max_output_tokens,
-                "response_format": response_format_payload,
+                "messages": [{"role": "user", "content": content}],
+                "max_tokens": max_output_tokens,
             }
+            if response_format_payload:
+                params["response_format"] = response_format_payload
             params = {key: value for key, value in params.items() if value is not None}
             client: Any = self._client
-            response = client.responses.create(**params)
+            response = client.chat.completions.create(**params)
         except httpx.TimeoutException as exc:
             raise mcp_error(TIMEOUT, f"OpenAI request timed out: {str(exc)}", exc)
         except Exception as exc:
             error_msg = f"OpenAI response error: {type(exc).__name__} - {str(exc)}"
             raise mcp_error(OPENAI_ERROR, error_msg, exc)
         duration_ms = int((time.monotonic() - started) * 1000)
-        text = getattr(response, "output_text", None)
-        if text is None:
-            text = response.output[0].content[0].text  # type: ignore[attr-defined]
+        
+        text = response.choices[0].message.content
         json_data: Optional[Dict[str, Any]] = None
-        if response_format == "json":
+        if response_format == "json" and text:
             try:
                 json_data = json.loads(text)
             except json.JSONDecodeError as exc:
