@@ -20,6 +20,10 @@ Multimodal MCP server exposing four file-oriented tools backed by the OpenAI API
 The server is file-first: it only reads from explicit input paths/URLs and writes to explicit output paths/URLs.
 
 ![Tools](./mcp-tools.png)
+> the image was created by the MCP server
+
+[Audio description of the project](./mcp-tools.mp3)
+> the audio file was created by the MCP server
 
 ## Run Locally
 
