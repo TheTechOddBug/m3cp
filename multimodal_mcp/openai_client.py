@@ -173,35 +173,48 @@ class OpenAIClient:
             "background": background,
             "quality": quality,
         }
-        # Note: format/output_format not supported by all models (e.g., gpt-image-1)
-        # The output format will be inferred from the file extension when writing
+        # Request base64 directly to avoid a second fetch for image URLs.
+        params["response_format"] = "b64_json"
+        if output_format:
+            params["output_format"] = output_format
         params = {key: value for key, value in params.items() if value is not None}
+        client: Any = self._client
         try:
-            client: Any = self._client
             response = client.images.generate(**params)
         except httpx.TimeoutException as exc:
             raise mcp_error(TIMEOUT, f"OpenAI request timed out: {str(exc)}", exc)
         except Exception as exc:
-            error_msg = f"OpenAI image generation error: {type(exc).__name__} - {str(exc)}"
-            raise mcp_error(OPENAI_ERROR, error_msg, exc)
+            retry_params = _strip_unsupported_image_params(params, exc)
+            if retry_params is None:
+                error_msg = f"OpenAI image generation error: {type(exc).__name__} - {str(exc)}"
+                raise mcp_error(OPENAI_ERROR, error_msg, exc)
+            try:
+                response = client.images.generate(**retry_params)
+            except httpx.TimeoutException as retry_exc:
+                raise mcp_error(TIMEOUT, f"OpenAI request timed out: {str(retry_exc)}", retry_exc)
+            except Exception as retry_exc:
+                error_msg = f"OpenAI image generation error: {type(retry_exc).__name__} - {str(retry_exc)}"
+                raise mcp_error(OPENAI_ERROR, error_msg, retry_exc)
         duration_ms = int((time.monotonic() - started) * 1000)
         
         # Handle both b64_json and URL responses
-        item = response.data[0]
-        has_b64 = hasattr(item, 'b64_json')
-        b64_val = getattr(item, 'b64_json', None) if has_b64 else None
-        has_url = hasattr(item, 'url')
-        url_val = getattr(item, 'url', None) if has_url else None
+        item = response.data[0] if hasattr(response, "data") else response["data"][0]
+        if isinstance(item, dict):
+            b64_val = item.get("b64_json")
+            url_val = item.get("url")
+        else:
+            b64_val = getattr(item, "b64_json", None)
+            url_val = getattr(item, "url", None)
         
-        if has_b64 and b64_val is not None:
+        if b64_val:
             image_data = base64.b64decode(b64_val)
-        elif has_url and url_val is not None:
+        elif url_val:
             # Download from URL for models like DALL-E-3
             url_response = httpx.get(url_val, timeout=30.0)
             url_response.raise_for_status()
             image_data = url_response.content
         else:
-            error_details = f"has_b64={has_b64}, b64_val={b64_val is not None if b64_val else False}, has_url={has_url}, url_val={url_val is not None if url_val else False}"
+            error_details = f"b64_present={bool(b64_val)}, url_present={bool(url_val)}"
             raise mcp_error(OPENAI_ERROR, f"No image data in response ({error_details})")
         
         return ImageGenerationResult(data=image_data, duration_ms=duration_ms)
@@ -283,3 +296,24 @@ def _extract_binary(response: Any) -> bytes:
     if hasattr(response, "read"):
         return response.read()  # type: ignore[return-value]
     return bytes(response)
+
+
+def _strip_unsupported_image_params(
+    params: Dict[str, Any],
+    exc: BaseException,
+) -> Optional[Dict[str, Any]]:
+    message = str(exc).lower()
+    if not any(token in message for token in ("unknown", "unrecognized", "unexpected", "invalid", "unsupported")):
+        return None
+    retry_params = dict(params)
+    removed = False
+    for name in ("output_format", "response_format", "background", "quality"):
+        if name in retry_params and name in message:
+            retry_params.pop(name, None)
+            removed = True
+    if not removed:
+        for name in ("output_format", "response_format", "background", "quality"):
+            if name in retry_params:
+                retry_params.pop(name, None)
+                removed = True
+    return retry_params if removed else None
