@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import io
 import logging
 import os
 from pathlib import Path
@@ -12,10 +13,24 @@ from multimodal_mcp.openai_client import OpenAIClient
 from multimodal_mcp.server import ToolService
 
 
-PNG_1X1 = base64.b64decode(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB"
-    "gLbq3gAAAABJRU5ErkJggg=="
-)
+def create_test_image() -> bytes:
+    """Create a valid 256x256 test image."""
+    try:
+        from PIL import Image
+        # Create a simple red 256x256 image
+        img = Image.new('RGB', (256, 256), color='red')
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        return buffer.getvalue()
+    except ImportError:
+        # Fallback to a known valid base64 encoded PNG if PIL is not available
+        # This is a valid 256x256 red square
+        return base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAAnklEQVR4nO3BMQEAAADCoPVP"
+            "bQhfoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOD8GDq8AAEkE9CTAAAAASUVORK5CYII="
+        )
 
 
 @pytest.mark.skipif(os.getenv("RUN_LIVE_TESTS") != "1", reason="Live tests disabled")
@@ -26,7 +41,7 @@ def test_live_image_analyze(tmp_path: Path) -> None:
     if not settings.openai_model_vision:
         pytest.skip("OPENAI_MODEL_VISION is not set")
     image_path = tmp_path / "image.png"
-    image_path.write_bytes(PNG_1X1)
+    image_path.write_bytes(create_test_image())
     client = OpenAIClient(settings)
     service = ToolService(settings, client, logging.getLogger("live"))
     result = service.image_analyze(
@@ -34,5 +49,8 @@ def test_live_image_analyze(tmp_path: Path) -> None:
         instruction="Describe the image",
         response_format="text",
     )
-    assert result["ok"] is True
+    if not result["ok"]:
+        print(f"\nTest failed with error: {result.get('error')}")
+        print(f"Full result: {result}")
+    assert result["ok"] is True, f"API call failed: {result.get('error', 'Unknown error')}"
     assert "text" in result["metadata"]

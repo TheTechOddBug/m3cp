@@ -31,11 +31,45 @@ The server is file-first: it only reads from explicit input paths/URLs and write
 python -m multimodal_mcp.main
 ```
 
-Or via the console script (after installing with `pip install -e .` or `uv pip install -e .`):
+Or via the console script (after installing with `uv sync`):
 
 ```bash
 mcp-multimodal-server
 ```
+
+## Running Tests
+
+Install the package with dev dependencies:
+
+```bash
+uv sync
+
+```
+
+Run all tests:
+
+```bash
+uv run pytest
+```
+
+Run tests with coverage:
+
+```bash
+uv run pytest --cov=multimodal_mcp
+```
+
+### Live Integration Tests
+
+Live integration tests make actual API calls to OpenAI and are disabled by default. To run them:
+
+```bash
+RUN_LIVE_TESTS=1 uv run pytest
+```
+
+**Note:** Live tests require:
+- Valid `OPENAI_API_KEY` in your `.env` file
+- Configured model environment variables (`OPENAI_MODEL_VISION`, etc.)
+- Will consume OpenAI API credits
 
 ## MCP Configuration (mcp.json)
 

@@ -17,14 +17,23 @@ dependencies = [
 [project.scripts]
 mcp-multimodal-server = "multimodal_mcp.main:main"
 
+[tool.setuptools]
+packages = ["multimodal_mcp"]
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
+    "pillow>=10.0.0",
 ]
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
