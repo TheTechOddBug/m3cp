@@ -1,10 +1,10 @@
 # Multimodal MCP Server
 
-![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
-![OpenAI](https://img.shields.io/badge/OpenAI-API-412991.svg)
-![MCP](https://img.shields.io/badge/MCP-Server-orange.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![FOSS Pluralism](https://img.shields.io/badge/FOSS-Pluralism-purple.svg)
+[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-API-412991.svg)](https://platform.openai.com/)
+[![MCP](https://img.shields.io/badge/MCP-Server-orange.svg)](https://gofastmcp.com/getting-started/welcome)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![FOSS Pluralism](https://img.shields.io/badge/FOSS-Pluralism-purple.svg)](FOSS_PLURALISM_MANIFESTO.md)
 
 A production-ready Model Context Protocol (MCP) server that brings OpenAI's multimodal capabilities—vision, image generation, speech-to-text, and text-to-speech—to any MCP-compatible client. Built with a file-first architecture for security and transparency, ensuring all operations use explicit input/output paths.
 
