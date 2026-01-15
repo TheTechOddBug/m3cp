@@ -10,12 +10,18 @@ A production-ready Model Context Protocol (MCP) server that brings OpenAI's mult
 
 ## Features
 
-Multimodal MCP server exposing four file-oriented tools backed by the OpenAI API:
+Multimodal MCP server exposing file-oriented tools backed by the OpenAI API:
 
 - `image_generate` - create an image from a prompt and write it to a client-specified destination.
 - `image_analyze` - interpret an image and return text or schema-validated JSON.
+- `image_edit` - edit or inpaint an image using a prompt and optional mask.
+- `image_extract` - extract structured JSON from images with schema enforcement.
+- `image_to_spec` - convert diagrams or UI into structured specs (Mermaid, OpenAPI, etc.).
 - `audio_transcribe` - transcribe audio to text (optionally write transcript to a file).
+- `audio_analyze` - analyze audio content and return text or schema-validated JSON.
+- `audio_transform` - transform speech-to-speech based on an instruction.
 - `audio_tts` - generate speech audio from text and write it to a client-specified destination.
+- `multimodal_chain` - execute a deterministic, explicit sequence of multimodal steps.
 
 The server is file-first: it only reads from explicit input paths/URLs and writes to explicit output paths/URLs.
 
@@ -24,6 +30,8 @@ The server is file-first: it only reads from explicit input paths/URLs and write
 
 [Audio description of the project](https://raw.githubusercontent.com/soyrochus/m3cp/main/mcp-tools.mp3)
 > the audio file was created by the MCP server
+
+For detailed tool semantics and client usage patterns, see [docs/m3cp-manual.md](docs/m3cp-manual.md).
 
 ## Run Locally
 
@@ -123,8 +131,11 @@ Optional configuration:
 - `OPENAI_PROJECT`
 - `OPENAI_MODEL_VISION`
 - `OPENAI_MODEL_IMAGE`
+- `OPENAI_MODEL_IMAGE_EDIT`
 - `OPENAI_MODEL_STT`
 - `OPENAI_MODEL_TTS`
+- `OPENAI_MODEL_AUDIO_ANALYZE`
+- `OPENAI_MODEL_AUDIO_TRANSFORM`
 - `ENABLE_REMOTE_URLS` (default false)
 - `ENABLE_PRESIGNED_UPLOADS` (default false)
 - `ALLOW_INSECURE_HTTP` (default false)
@@ -162,6 +173,38 @@ client.call_tool(
     },
 )
 
+# image_edit
+client.call_tool(
+    "image_edit",
+    {
+        "image_ref": "/tmp/city.png",
+        "prompt": "Add a subtle fog layer",
+        "output_ref": "/tmp/city-edited.png",
+        "overwrite": True,
+    },
+)
+
+# image_extract
+client.call_tool(
+    "image_extract",
+    {
+        "image_ref": "/tmp/form.png",
+        "instruction": "Extract form fields",
+        "json_schema": {"type": "object", "properties": {"name": {"type": "string"}}},
+    },
+)
+
+# image_to_spec
+client.call_tool(
+    "image_to_spec",
+    {
+        "image_ref": "/tmp/diagram.png",
+        "target_format": "mermaid",
+        "output_ref": "/tmp/diagram.mmd",
+        "overwrite": True,
+    },
+)
+
 # audio_transcribe
 client.call_tool(
     "audio_transcribe",
@@ -169,6 +212,27 @@ client.call_tool(
         "audio_ref": "/tmp/meeting.wav",
         "timestamps": True,
         "output_ref": "/tmp/meeting.txt",
+        "overwrite": True,
+    },
+)
+
+# audio_analyze
+client.call_tool(
+    "audio_analyze",
+    {
+        "audio_ref": "/tmp/meeting.wav",
+        "instruction": "Summarize tone and speaker dynamics",
+        "response_format": "text",
+    },
+)
+
+# audio_transform
+client.call_tool(
+    "audio_transform",
+    {
+        "audio_ref": "/tmp/meeting.wav",
+        "instruction": "Translate to Spanish and keep a calm tone",
+        "output_ref": "/tmp/meeting-es.mp3",
         "overwrite": True,
     },
 )
@@ -181,6 +245,31 @@ client.call_tool(
         "output_ref": "/tmp/welcome.mp3",
         "format": "mp3",
         "overwrite": True,
+    },
+)
+
+# multimodal_chain
+client.call_tool(
+    "multimodal_chain",
+    {
+        "steps": [
+            {
+                "tool": "image_analyze",
+                "args": {
+                    "image_ref": "/tmp/diagram.png",
+                    "instruction": "Summarize the architecture",
+                },
+                "outputs_as": "analysis",
+            },
+            {
+                "tool": "audio_tts",
+                "args": {
+                    "text": {"$ref": "analysis.metadata.text"},
+                    "output_ref": "/tmp/summary.mp3",
+                    "overwrite": True,
+                },
+            },
+        ]
     },
 )
 ```

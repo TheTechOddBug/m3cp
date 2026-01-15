@@ -34,8 +34,11 @@ class Settings:
     openai_project: Optional[str]
     openai_model_vision: Optional[str]
     openai_model_image: Optional[str]
+    openai_model_image_edit: Optional[str]
     openai_model_stt: Optional[str]
     openai_model_tts: Optional[str]
+    openai_model_audio_analyze: Optional[str]
+    openai_model_audio_transform: Optional[str]
     enable_remote_urls: bool
     enable_presigned_uploads: bool
     allow_insecure_http: bool
@@ -64,8 +67,11 @@ def load_settings() -> Settings:
         openai_project=os.getenv("OPENAI_PROJECT"),
         openai_model_vision=os.getenv("OPENAI_MODEL_VISION"),
         openai_model_image=os.getenv("OPENAI_MODEL_IMAGE"),
+        openai_model_image_edit=os.getenv("OPENAI_MODEL_IMAGE_EDIT"),
         openai_model_stt=os.getenv("OPENAI_MODEL_STT"),
         openai_model_tts=os.getenv("OPENAI_MODEL_TTS"),
+        openai_model_audio_analyze=os.getenv("OPENAI_MODEL_AUDIO_ANALYZE"),
+        openai_model_audio_transform=os.getenv("OPENAI_MODEL_AUDIO_TRANSFORM"),
         enable_remote_urls=_get_env_bool("ENABLE_REMOTE_URLS", False),
         enable_presigned_uploads=_get_env_bool("ENABLE_PRESIGNED_UPLOADS", False),
         allow_insecure_http=_get_env_bool("ALLOW_INSECURE_HTTP", False),

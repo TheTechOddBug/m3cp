@@ -55,6 +55,43 @@ class ImageAnalyzeArgs(BaseModel):
     model: Optional[str] = None
 
 
+class ImageEditArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    image_ref: str
+    prompt: str
+    mask_ref: Optional[str] = None
+    output_ref: str
+    format: Optional[str] = None
+    size: Optional[str] = None
+    overwrite: bool = False
+    model: Optional[str] = None
+    output_headers: Optional[Dict[str, str]] = None
+
+
+class ImageExtractArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    image_ref: str
+    instruction: str
+    json_schema: Dict[str, Any]
+    language: Optional[str] = None
+    max_output_tokens: Optional[int] = None
+    model: Optional[str] = None
+
+
+class ImageToSpecArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    image_ref: str
+    target_format: str
+    instruction: Optional[str] = None
+    output_ref: Optional[str] = None
+    overwrite: bool = False
+    model: Optional[str] = None
+    output_headers: Optional[Dict[str, str]] = None
+
+
 class AudioTranscribeArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -64,6 +101,29 @@ class AudioTranscribeArgs(BaseModel):
     timestamps: bool = False
     diarize: bool = False
     output_ref: Optional[str] = None
+    overwrite: bool = False
+    model: Optional[str] = None
+    output_headers: Optional[Dict[str, str]] = None
+
+
+class AudioAnalyzeArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    audio_ref: str
+    instruction: str
+    response_format: str = "text"
+    json_schema: Optional[Dict[str, Any]] = None
+    model: Optional[str] = None
+
+
+class AudioTransformArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    audio_ref: str
+    instruction: str
+    output_ref: str
+    voice: Optional[str] = None
+    format: Optional[str] = None
     overwrite: bool = False
     model: Optional[str] = None
     output_headers: Optional[Dict[str, str]] = None
@@ -80,3 +140,19 @@ class AudioTtsArgs(BaseModel):
     overwrite: bool = False
     model: Optional[str] = None
     output_headers: Optional[Dict[str, str]] = None
+
+
+class MultimodalChainStepArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    tool: str
+    args: Dict[str, Any]
+    outputs_as: Optional[str] = None
+
+
+class MultimodalChainArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    steps: List[MultimodalChainStepArgs]
+    final_output_ref: Optional[str] = None
+    overwrite: bool = False
