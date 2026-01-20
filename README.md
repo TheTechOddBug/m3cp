@@ -282,6 +282,10 @@ client.call_tool(
 - Output directories are only created when `ALLOW_MKDIR=true`.
 - Ensure the server has access only to the files and network locations you intend it to reach.
 
+## Implementation details
+
+See the notes and details about the technical implementation [here](./implementation-details.md)
+
 ## Principles of Participation
 
 Everyone is invited and welcome to contribute: open issues, propose pull requests, share ideas, or help improve documentation.  
